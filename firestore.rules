@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  // entry point to our db
+  match /databases/{database}/documents {
+    // match any documents inside
+    // users collectin & capture doc id inside this wildcard var
+    match /users/{user_id}{
+      // allow read & write access to authenticated usrs
+      // request.auth is not null, means user is logged in
+      // by this we check if the user is authenticated
+      // on every request to any service on firebase login jwt is send to firebase
+      // and that jwt is identified on server
+  allow read, create: if request.auth != null;
+
+  // uodate only if the usr have created that doc
+  allow update: if request.auth.uid == user_id;
+    }
+
+  match /projects/{project_id} {
+    allow read, create, update: if request.auth != null;
+    // resource represent the doc itself
+    // data -> to get the data of the doc
+    allow delete: if request.auth.uid == resource.data.createdBy.id;
+  }
+  }
+}
+
+
+// Rules
+// usrs collection
+// - any authenticated user can read & create
+// - only users who "own/created" a document can update it (user id's match)
+
+
+// -- project collection
+// - any authenticated usr can read, create & update a doc
+// - only users who 'own/created' a doc can delete it
